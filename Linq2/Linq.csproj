@@ -45,6 +45,7 @@
   <ItemGroup>
     <Compile Include="Customer.cs" />
     <Compile Include="LinqSamples.cs" />
+    <Compile Include="ObjectDumper.cs" />
     <Compile Include="Order.cs" />
     <Compile Include="Product.cs" />
     <Compile Include="Program.cs" />

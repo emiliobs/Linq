@@ -8,6 +8,8 @@ using System.Xml.Linq;
 using System.IO;
 //
 using static System.Console;
+using System.Data;
+using System.Data.SqlClient;
 
 namespace Linq2
 {
@@ -15,7 +17,14 @@ namespace Linq2
     {
         private List<Product> ProductsList;
         private List<Customer> CustomersList;
-        
+
+        private DataSet testDS;
+
+        public LinqSamples()
+        {
+            testDS = new DataSet();
+        }
+
 
         public object XDocumento { get; private set; }
 
@@ -34,7 +43,9 @@ namespace Linq2
             }
       }
 
-      [Description("This sample uses the where clause to find all product that are out of stok.")]
+       
+
+        [Description("This sample uses the where clause to find all product that are out of stok.")]
       public void Linq2()
       {
             List<Product> products = GetProductList();
@@ -97,6 +108,8 @@ namespace Linq2
                 WriteLine($"The {d} is shorter that its value.");
             }
      }
+
+
 
         private List<Customer> GetCustomerList()
         {
@@ -232,5 +245,207 @@ namespace Linq2
                      })
                      .ToList();
         }
+        
+        #region "Projection Operators"
+
+        //[Category("Projection Operators"]
+        [Description("This sample uses select to produce a sequence of ints ona higher than those in an existing array of ints")]
+        public void DataSetLinq6()
+        {
+            int[] numbers = { 5,4,1,2,3,9,8,6,7,2,0 };
+
+            var numsPlusOne = from n in numbers select n + 1;
+
+            WriteLine("Numbers + 1");
+            foreach (var number  in numsPlusOne)
+            {
+                WriteLine(number);
+            } 
+        }
+
+        [Description("this sample uses select to return a sequence of just the names of a list of product.")]
+        public void Linq7()
+        {
+            List<Product> productos = GetProductList();
+
+            var productNames = from pn in productos select pn.ProductName;
+
+            WriteLine("Product Name");
+            foreach (var productName in productNames)
+            {
+                WriteLine(productName);
+            }
+        }
+
+        [Description("This example uses select to produce a sequence os string representing the text version of a sequence of ints.")]
+        public void Linq8()
+        {
+            int[] numbers = {5,4,1,2,3,9,8,6,7,2,0 };
+            string[] strings = {"zero","one","two","three","four","five","six","seven","eight", "nine"};
+
+            var textnums = from n in numbers select strings[n];
+            WriteLine("Number strings");
+            foreach (var s in textnums)
+            {
+                WriteLine(s);
+            }
+        }
+
+        [Description("This sample uses select to produce a sequence of the uppercase and lowercase version of each word in the original array")]
+        public void Linq9()
+        {
+            string[] words = { "aPPLE", "BLUeBeRry", "cHeRrY" };
+
+            var upperLowerWords = from w in words select new { Upper = w.ToUpper(), Lower = w.ToLower() };
+
+            foreach (var ul in upperLowerWords)
+            {
+                WriteLine($"Uppercase: {ul.Upper}, Lowercase: {ul.Lower}");
+
+
+            }
+        }
+        
+        [Description("This sample uset select to produce a sequence containing text representation of digits and wheter their length is even or odd")]
+        public void Linq10()
+        {
+            int[] numbers = { 5, 4, 1, 2, 3, 9, 8, 6, 7, 2, 0 };
+            string[] strings = { "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine" };
+
+            var digitOddEven = from n in numbers select new { digit = strings[n], Even = (n % 2 == 0  )};
+
+            foreach (var d  in digitOddEven)
+            {
+                WriteLine($"The digit {d.digit} is {(d.Even ? "Even" : "Odd")}");
+
+            }
+        }
+
+        [Description("This sample uses select to produce a sequence containing some properties of Products," 
+                     +"including UnitProce which is renamed to Price in the resulting type")]
+        public void Linq11()
+        {
+            List<Product> products = GetProductList();
+
+            var productInfos = from p in products select new {p.ProductName, p.Category, Price = p.Unitprice };
+
+            WriteLine("Product Info: ");
+
+            foreach (var productInfo in productInfos)
+            {
+                WriteLine($"{productInfo.ProductName} is in the category {productInfo.Category} per unit. {productInfo.Price}");
+            }
+        }
+
+        [Description("This sample uses an indexed select clause to determine if the value of ints in array match their position in the array")]
+        public void Linq12()
+        {
+            int[] numbers = { 5,4,1,3,9,8,6,7,2,0 };
+
+            var numsInPlace = numbers.Select((num, index) => new { Num = num, inPlace = (num == index) });
+
+            WriteLine("Number: InPlace? ");
+
+            foreach (var n in numsInPlace)
+            {
+                WriteLine($"{n.Num}: {n.inPlace}");
+            }
+        }
+
+        [Description("This sample combines select and where to make a simple query that returns the next form of each digit less than 5.")]
+        public void Linq13()
+        {
+            int[] numbers = { 5, 4, 1, 3, 9, 8, 6, 7, 2, 0 };
+            string[] digits = { "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine" };
+
+            var lowNums = from n in numbers where n < 5 select digits[n];
+
+            WriteLine("Numbers < 5");
+            foreach (var num in lowNums)
+            {
+                WriteLine(num);
+            }
+
+        }
+
+        [Description("This sample uses a compound from clause to make a query that returns all pairs of numbers from both arrays such that the number from numbersA is less than the number from numbersB.")]
+        public void Linq14()
+        {
+            int[] numbersA = { 0,2,4,5,6,8,9 };
+            int[] numbersB = { 1,3,5,7,8};
+
+            var pairs = from a in numbersA from b in numbersB where a < b select new { a, b };
+
+            WriteLine("Pairs where a < b: ");
+            foreach (var pair in pairs)
+            {
+                WriteLine($"{ pair.a} is less than {pair.b}");
+            }
+        }
+
+        [Description("This sample uses a compound from clause to select all orders where the order total is less than 500.00.")]
+        public void Linq15()
+        {
+            List<Customer> customers = GetCustomerList();
+
+            var orders = from c in customers from o in c.Orders where o.Total < 500.00M select new  { c.CustomerID, o.OrderID, o.Total };
+
+            ObjectDumper.Write(orders);
+        }
+
+          [Description("This sample uses a compound from clause to select all orders where the order was made in 1998 or later.")]
+        public void Linq16()
+        {
+            List<Customer> customers = GetCustomerList();
+
+            var orders = from c in customers from o in c.Orders where o.OrderDate >= new DateTime(1998, 1, 1) 
+                         select new { c.CustomerID, o.OrderID, o.OrderDate };
+
+            ObjectDumper.Write(orders);
+                         //foreach (var order in orders)
+            //{
+            //    WriteLine($"{order.CustomerID} {order.OrderID} {order.OrderDate}");
+
+            //}
+        }
+
+        [Description("This sample uses a compound from clause to select all orders where the order total is greater than 2000.00 and uses from assignment to avoid requesting the total twice.")]
+        public void Linq76()
+        {
+            List<Customer> customers = GetCustomerList();
+
+            var orders = from c in customers from o in c.Orders where o.Total >= 200.0M select new { c.CustomerID, o.OrderID, o.Total };
+
+            ObjectDumper.Write(orders);
+        }
+
+        [Description("This sample uses multiple from clauses so that filtering on customers can be done before selecting their orders. This makes the query more efficient by not selecting and then discarding orders for customers outside of Washington.")]
+        public void Linq18()
+        {
+            List<Customer> customers = GetCustomerList();
+
+            DateTime cutoffDate = new DateTime(1997, 1, 1);
+
+            var orders = from c in customers
+                         where c.Region == "WA"
+                         from o in c.Orders
+                         where o.OrderDate >= cutoffDate
+                         select new {c.CustomerID, o.OrderID };
+
+            ObjectDumper.Write(orders);  
+        }
+
+        [Description("This sample uses an indexed SelectMany clause to select all orders, while referring to customers by the order in which they are returned from the query.")]
+        public void Linq19()
+        {
+            List<Customer> customers = GetCustomerList();
+
+            var customerOrders = customers.SelectMany((cust, custIndex) =>  cust.Orders.Select(o => " Customer # " + ( custIndex + 1) +
+                                 " Has an order with OrderID " + o.OrderID));
+
+            ObjectDumper.Write(customerOrders);
+        }
+
+        #endregion
     }
 }
